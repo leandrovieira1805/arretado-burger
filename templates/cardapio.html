@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio - Arretado Burger</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Arretado Burger" class="navbar-logo">
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/cardapio">Cardápio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#combos">Combos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#contato">Contato</a>
+                    </li>
+                </ul>
+                <div class="cart-icon" onclick="toggleCart()">
+                    <i class="fas fa-shopping-cart text-white fa-lg"></i>
+                    <span class="cart-count">0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Carrinho -->
+    <div class="cart-modal" id="cartModal">
+        <h4>Seu Pedido <button class="btn-close float-end" onclick="toggleCart()"></button></h4>
+        <div id="cartItems" class="mt-3">
+            <!-- Items do carrinho serão inseridos aqui -->
+        </div>
+        <div class="cart-total mt-3">
+            <h5>Total: R$ <span id="cartTotal">0.00</span></h5>
+        </div>
+        <button class="btn btn-primary w-100 mt-3" onclick="finalizarPedido()">
+            Finalizar Pedido
+        </button>
+    </div>
+
+    <div class="container py-5 mt-5">
+        <div class="text-center mb-5">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Arretado Burger" class="hero-logo mb-4">
+            <h1>Cardápio</h1>
+        </div>
+
+        <div class="menu-section" id="hamburgueres">
+            <h2 class="category-title">Hambúrgueres Tradicionais</h2>
+            <div class="row" id="burgers-container">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+
+        <div class="menu-section" id="combos">
+            <h2 class="category-title">Combos</h2>
+            <div class="row" id="combos-container">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+
+        <div class="menu-section" id="petiscos">
+            <h2 class="category-title">Petiscos</h2>
+            <div class="row" id="petiscos-container">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+
+        <div class="menu-section" id="bebidas">
+            <h2 class="category-title">Bebidas</h2>
+            <div class="row" id="bebidas-container">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Arretado Burger" class="mb-3" style="height: 60px;">
+                    <h5>Sobre Nós</h5>
+                    <p>O Arretado Burger é especializado em hambúrgueres artesanais de alta qualidade, trazendo o melhor sabor para sua mesa.</p>
+                    <div class="social-links mt-3">
+                        <a href="https://www.instagram.com/arretadoburger.lg" target="_blank" class="text-white me-3">
+                            <i class="fab fa-instagram"></i> @arretadoburger.lg
+                        </a>
+                        <br>
+                        <a href="https://wa.me/5587988320957" target="_blank" class="text-white">
+                            <i class="fab fa-whatsapp"></i> (87) 98832-0957
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h5>Links Rápidos</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/cardapio" class="text-white">Cardápio</a></li>
+                        <li><a href="#combos" class="text-white">Combos</a></li>
+                        <li><a href="/#contato" class="text-white">Contato</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Endereço</h5>
+                    <p>Rua Principal, 123<br>Centro<br>Cidade - Estado</p>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <p class="mb-0">&copy; 2025 Arretado Burger. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let cart = [];
+        let cartTotal = 0;
+
+        // Função para criar um card de item do menu
+        function createMenuCard(item) {
+            const imagePath = item.imagem ? 
+                `{{ url_for('static', filename='images/') }}${item.imagem}` : 
+                `{{ url_for('static', filename='images/placeholder.jpg') }}`;
+            
+            return `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card menu-item h-100">
+                        <div class="position-relative">
+                            <img src="${imagePath}" class="card-img-top" alt="${item.nome}" 
+                                 onerror="this.src='{{ url_for('static', filename='images/placeholder.jpg') }}'">
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-primary">R$ ${item.preco.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${item.nome}</h5>
+                            <p class="card-text flex-grow-1">${item.descricao}</p>
+                            ${item.acompanhamentos ? `<p class="card-text"><small class="text-muted">Acompanha: ${item.acompanhamentos}</small></p>` : ''}
+                            <button class="btn btn-primary mt-3" onclick="addToCart('${item.nome}', ${item.preco})">
+                                <i class="fas fa-cart-plus me-2"></i>Adicionar ao Carrinho
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleCart() {
+            const cartModal = document.getElementById('cartModal');
+            cartModal.classList.toggle('active');
+        }
+
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            cartTotal += price;
+            updateCartUI();
+            
+            Swal.fire({
+                title: 'Item Adicionado!',
+                text: `${name} foi adicionado ao seu carrinho`,
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+
+        function updateCartUI() {
+            const cartItems = document.getElementById('cartItems');
+            const cartCount = document.querySelector('.cart-count');
+            const cartTotalElement = document.getElementById('cartTotal');
+            
+            cartCount.textContent = cart.length;
+            cartTotalElement.textContent = cartTotal.toFixed(2);
+            
+            cartItems.innerHTML = cart.map((item, index) => `
+                <div class="cart-item d-flex justify-content-between align-items-center mb-2">
+                    <span>${item.name}</span>
+                    <div>
+                        <span class="me-2">R$ ${item.price.toFixed(2)}</span>
+                        <button class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function removeFromCart(index) {
+            cartTotal -= cart[index].price;
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function finalizarPedido() {
+            if (cart.length === 0) {
+                Swal.fire('Ops!', 'Seu carrinho está vazio', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Finalizar Pedido',
+                html: `
+                    <input id="nome" class="swal2-input" placeholder="Nome">
+                    <input id="endereco" class="swal2-input" placeholder="Endereço">
+                    <input id="telefone" class="swal2-input" placeholder="Telefone">
+                `,
+                confirmButtonText: 'Confirmar Pedido',
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const nome = document.getElementById('nome').value;
+                    const endereco = document.getElementById('endereco').value;
+                    const telefone = document.getElementById('telefone').value;
+                    
+                    if (!nome || !endereco || !telefone) {
+                        Swal.showValidationMessage('Por favor, preencha todos os campos');
+                        return false;
+                    }
+                    
+                    return { nome, endereco, telefone };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const pedido = {
+                        nome: result.value.nome,
+                        endereco: result.value.endereco,
+                        telefone: result.value.telefone,
+                        items: cart.map(item => item.name),
+                        total: cartTotal
+                    };
+
+                    fetch('/fazer_pedido', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(pedido)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        Swal.fire(
+                            'Pedido Realizado!',
+                            'Seu pedido foi enviado com sucesso!',
+                            'success'
+                        );
+                        cart = [];
+                        cartTotal = 0;
+                        updateCartUI();
+                        toggleCart();
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Erro!',
+                            'Ocorreu um erro ao fazer seu pedido',
+                            'error'
+                        );
+                    });
+                }
+            });
+        }
+
+        // Carregar dados do cardápio
+        async function loadMenuData() {
+            try {
+                const [burgersResponse, combosResponse, petiscosResponse, bebidasResponse] = await Promise.all([
+                    fetch('/api/burgers'),
+                    fetch('/api/combos'),
+                    fetch('/api/produtos/petisco'),
+                    fetch('/api/produtos/bebida')
+                ]);
+
+                const [burgers, combos, petiscos, bebidas] = await Promise.all([
+                    burgersResponse.json(),
+                    combosResponse.json(),
+                    petiscosResponse.json(),
+                    bebidasResponse.json()
+                ]);
+
+                document.getElementById('burgers-container').innerHTML = 
+                    burgers.map(burger => createMenuCard(burger)).join('');
+                
+                document.getElementById('combos-container').innerHTML = 
+                    combos.map(combo => createMenuCard(combo)).join('');
+                
+                document.getElementById('petiscos-container').innerHTML = 
+                    petiscos.map(petisco => createMenuCard(petisco)).join('');
+                
+                document.getElementById('bebidas-container').innerHTML = 
+                    bebidas.map(bebida => createMenuCard(bebida)).join('');
+
+            } catch (error) {
+                console.error('Erro ao carregar o cardápio:', error);
+                Swal.fire(
+                    'Erro!',
+                    'Não foi possível carregar o cardápio',
+                    'error'
+                );
+            }
+        }
+
+        // Carregar o cardápio quando a página carregar
+        document.addEventListener('DOMContentLoaded', loadMenuData);
+    </script>
+</body>
+</html>
